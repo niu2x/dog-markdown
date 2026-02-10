@@ -45,15 +45,15 @@ mypy src/
 ### Testing
 Run all tests:
 ```bash
-pytest
+uv run pytest
 ```
 Run a single test file:
 ```bash
-pytest tests/test_markdown_parser.py
+uv run pytest tests/test_markdown_generator.py
 ```
 Run a specific test function:
 ```bash
-pytest tests/test_markdown_parser.py::test_parse_heading
+uv run pytest tests/test_markdown_generator.py::TestMarkdownGeneration::test_nested_blockquote_to_str
 ```
 
 ## 2. Code Style Guidelines
