@@ -322,7 +322,7 @@ class TestMarkdownGeneration:
                 Paragraph(
                     children=[
                         Text(content="Welcome to my "),
-                        Text(content="."),
+                        Text(content=" . "),
                     ]
                 ),
                 UnorderedList(
@@ -364,6 +364,46 @@ class TestMarkdownGeneration:
             "def hello():\n"
             "    print('hi')\n"
             "```"
+        )
+
+        assert doc.to_str() == expected
+
+    def test_nested_blockquote_to_str(self):
+        doc = Document(
+            children=[
+                Blockquote(
+                    content=Document(
+                        children=[
+                            Paragraph(children=[Text(content="123")]),
+                            Paragraph(children=[Text(content="123")]),
+                            Blockquote(
+                                content=Document(
+                                    children=[
+                                        Paragraph(children=[Text(content="123")]),
+                                        Paragraph(children=[Text(content="123")]),
+                                        CodeBlock(content="local a = 123\n b = a"),
+                                    ]
+                                )
+                            ),
+                        ]
+                    )
+                )
+            ]
+        )
+
+        expected = (
+            "> 123\n"
+            ">\n"
+            "> 123\n"
+            ">\n"
+            "> > 123\n"
+            "> >\n"
+            "> > 123\n"
+            "> >\n"
+            "> > ```\n"
+            "> > local a = 123\n"
+            "> >  b = a\n"
+            "> > ```"
         )
 
         assert doc.to_str() == expected
