@@ -114,15 +114,15 @@ class MarkdownBuilder:
             content: Quote content as string or list of elements
         """
         if isinstance(content, str):
-            self._children.append(Blockquote(content=content))
-        else:
-            doc_children = []
-            for item in content:
-                if isinstance(item, str):
-                    doc_children.append(Paragraph(children=[Text(content=item)]))
-                else:
-                    doc_children.append(item)
-            self._children.append(Blockquote(content=Document(children=doc_children)))
+            content = [content]
+
+        doc_children = []
+        for item in content:
+            if isinstance(item, str):
+                doc_children.append(Paragraph(children=[Text(content=item)]))
+            else:
+                doc_children.append(item)
+        self._children.append(Blockquote(content=Document(children=doc_children)))
         return self
 
     def add_table(

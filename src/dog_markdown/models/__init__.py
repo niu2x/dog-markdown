@@ -137,18 +137,13 @@ class CodeBlock(MarkdownElement):
 class Blockquote(MarkdownElement):
     """Blockquote element for quoted text."""
 
-    content: str | Document = Field(..., description="Quote content")
+    content: Document = Field(..., description="Quote content")
 
     def to_str(self) -> str:
-        if isinstance(self.content, Document):
-            content_str = self.content.to_str()
-            lines = content_str.split("\n")
-            quoted_lines = [f"> {line}" if line.strip() else ">" for line in lines]
-            return "\n".join(quoted_lines)
-        else:
-            lines = self.content.split("\n")
-            quoted_lines = [f"> {line}" if line.strip() else ">" for line in lines]
-            return "\n".join(quoted_lines)
+        content_str = self.content.to_str()
+        lines = content_str.split("\n")
+        quoted_lines = [f"> {line}" if line.strip() else ">" for line in lines]
+        return "\n".join(quoted_lines)
 
 
 class Table(MarkdownElement):

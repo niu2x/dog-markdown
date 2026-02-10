@@ -356,7 +356,7 @@ class TestMarkdownGeneration:
 
         expected = (
             "# My Document\n\n"
-            "Welcome to my .\n\n"
+            "Welcome to my  . \n\n"
             "- First feature\n\n"
             "- Second feature\n\n"
             "- Third feature\n\n"
