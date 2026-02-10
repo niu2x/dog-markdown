@@ -27,7 +27,7 @@ class MarkdownBuilder:
         self._children = []
         self._current_list_items = []
 
-    def add_heading(self, level: int, content: str) -> "MarkdownBuilder":
+    def add_heading(self, level: int, content: str) -> MarkdownBuilder:
         """Add a heading to the document.
 
         Args:
@@ -39,7 +39,7 @@ class MarkdownBuilder:
 
     def add_paragraph(
         self, content: str | List[str | Text | Link | Image]
-    ) -> "MarkdownBuilder":
+    ) -> MarkdownBuilder:
         """Add a paragraph to the document.
 
         Args:
@@ -57,7 +57,7 @@ class MarkdownBuilder:
             self._children.append(Paragraph(children=children))
         return self
 
-    def add_text(self, content: str) -> "MarkdownBuilder":
+    def add_text(self, content: str) -> MarkdownBuilder:
         """Add a plain text paragraph to the document.
 
         Args:
@@ -67,7 +67,7 @@ class MarkdownBuilder:
 
     def add_link(
         self, text: str, url: str, title: str | None = None
-    ) -> "MarkdownBuilder":
+    ) -> MarkdownBuilder:
         """Add a link as a standalone paragraph.
 
         Args:
@@ -79,7 +79,7 @@ class MarkdownBuilder:
 
     def add_image(
         self, alt: str, url: str, title: str | None = None
-    ) -> "MarkdownBuilder":
+    ) -> MarkdownBuilder:
         """Add an image to the document.
 
         Args:
@@ -95,7 +95,7 @@ class MarkdownBuilder:
 
     def add_code_block(
         self, content: str, language: str | None = None
-    ) -> "MarkdownBuilder":
+    ) -> MarkdownBuilder:
         """Add a code block to the document.
 
         Args:
@@ -107,7 +107,7 @@ class MarkdownBuilder:
 
     def add_blockquote(
         self, content: str | List[str | Text | Link | Image | Paragraph]
-    ) -> "MarkdownBuilder":
+    ) -> MarkdownBuilder:
         """Add a blockquote to the document.
 
         Args:
@@ -130,7 +130,7 @@ class MarkdownBuilder:
         headers: List[str],
         rows: List[List[str | Text | Link | Image]],
         align: List[str | None] | None = None,
-    ) -> "MarkdownBuilder":
+    ) -> MarkdownBuilder:
         """Add a table to the document.
 
         Args:
@@ -141,14 +141,14 @@ class MarkdownBuilder:
         self._children.append(Table(headers=headers, rows=rows, align=align))  # type: ignore
         return self
 
-    def start_list(self) -> "MarkdownBuilder":
+    def start_list(self) -> MarkdownBuilder:
         """Start an unordered list."""
         self._current_list_items = []
         return self
 
     def add_list_item(
         self, content: str | List[str | Text | Link | Image | Paragraph]
-    ) -> "MarkdownBuilder":
+    ) -> MarkdownBuilder:
         """Add an item to the current list.
 
         Args:
@@ -171,7 +171,7 @@ class MarkdownBuilder:
         self._current_list_items.append(ListItem(content=doc))
         return self
 
-    def end_list(self) -> "MarkdownBuilder":
+    def end_list(self) -> MarkdownBuilder:
         """End the current list and add it to the document."""
         if self._current_list_items:
             self._children.append(UnorderedList(items=self._current_list_items))
