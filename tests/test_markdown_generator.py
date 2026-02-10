@@ -208,12 +208,36 @@ class TestMarkdownGeneration:
 
     def test_blockquote_to_str(self):
         # Basic blockquote
-        quote1 = Blockquote(content="This is a quote")
+        quote1 = Blockquote(
+            content=Document(
+                children=[Paragraph(children=[Text(content="This is a quote")])]
+            )
+        )
         assert quote1.to_str() == "> This is a quote"
 
         # Multi-line blockquote
-        quote2 = Blockquote(content="Line 1\nLine 2\n\nLine 3")
-        assert quote2.to_str() == "> Line 1\n> Line 2\n>\n> Line 3"
+        quote2 = Blockquote(
+            content=Document(
+                children=[
+                    Paragraph(
+                        children=[
+                            Text(content="Line 1"),
+                        ]
+                    ),
+                    Paragraph(
+                        children=[
+                            Text(content="Line 2"),
+                        ]
+                    ),
+                    Paragraph(
+                        children=[
+                            Text(content="Line 3"),
+                        ]
+                    ),
+                ]
+            )
+        )
+        assert quote2.to_str() == "> Line 1\n>\n> Line 2\n>\n> Line 3"
 
         # Blockquote with Document content
         quote3 = Blockquote(
