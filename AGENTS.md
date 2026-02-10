@@ -76,6 +76,8 @@ uv run pytest tests/test_markdown_generator.py::TestMarkdownGeneration::test_nes
 - Add type hints for all function parameters, return values, and module-level variables
 - Use `from typing import TYPE_CHECKING` and `if TYPE_CHECKING:` blocks for circular imports
 - Prefer standard library types (e.g., `list[str]` over `List[str]` in Python 3.9+)
+- Use union type syntax `A | B` instead of `Union[A, B]` (Python 3.10+)
+- Use optional type syntax `A | None` instead of `Optional[A]` (Python 3.10+)
 - Mark modules as typed with `py.typed` files (already present in `src/dog_markdown/`)
 
 ### Naming Conventions
