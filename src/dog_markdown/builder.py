@@ -3,7 +3,8 @@ Builder API for procedural Markdown document creation.
 Provides a fluent interface for building documents without directly creating models.
 """
 
-from typing import List, Union, Optional
+from __future__ import annotations
+from typing import List
 from .models import (
     Document,
     Heading,
@@ -37,7 +38,7 @@ class MarkdownBuilder:
         return self
 
     def add_paragraph(
-        self, content: Union[str, List[Union[str, Text, Link, Image]]]
+        self, content: str | List[str | Text | Link | Image]
     ) -> "MarkdownBuilder":
         """Add a paragraph to the document.
 
@@ -65,7 +66,7 @@ class MarkdownBuilder:
         return self.add_paragraph(content)
 
     def add_link(
-        self, text: str, url: str, title: Optional[str] = None
+        self, text: str, url: str, title: str | None = None
     ) -> "MarkdownBuilder":
         """Add a link as a standalone paragraph.
 
@@ -77,7 +78,7 @@ class MarkdownBuilder:
         return self.add_paragraph([Link(text=text, url=url, title=title)])
 
     def add_image(
-        self, alt: str, url: str, title: Optional[str] = None
+        self, alt: str, url: str, title: str | None = None
     ) -> "MarkdownBuilder":
         """Add an image to the document.
 
@@ -93,7 +94,7 @@ class MarkdownBuilder:
         return self
 
     def add_code_block(
-        self, content: str, language: Optional[str] = None
+        self, content: str, language: str | None = None
     ) -> "MarkdownBuilder":
         """Add a code block to the document.
 
@@ -105,7 +106,7 @@ class MarkdownBuilder:
         return self
 
     def add_blockquote(
-        self, content: Union[str, List[Union[str, Text, Link, Image, Paragraph]]]
+        self, content: str | List[str | Text | Link | Image | Paragraph]
     ) -> "MarkdownBuilder":
         """Add a blockquote to the document.
 
@@ -127,8 +128,8 @@ class MarkdownBuilder:
     def add_table(
         self,
         headers: List[str],
-        rows: List[List[Union[str, Text, Link, Image]]],
-        align: Optional[List[Optional[str]]] = None,
+        rows: List[List[str | Text | Link | Image]],
+        align: List[str | None] | None = None,
     ) -> "MarkdownBuilder":
         """Add a table to the document.
 
@@ -146,7 +147,7 @@ class MarkdownBuilder:
         return self
 
     def add_list_item(
-        self, content: Union[str, List[Union[str, Text, Link, Image, Paragraph]]]
+        self, content: str | List[str | Text | Link | Image | Paragraph]
     ) -> "MarkdownBuilder":
         """Add an item to the current list.
 
