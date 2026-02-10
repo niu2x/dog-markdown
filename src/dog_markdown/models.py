@@ -36,20 +36,6 @@ class Text(MarkdownElement):
         return content
 
 
-class Heading(MarkdownElement):
-    """Heading element (H1-H6)."""
-
-    level: int = Field(..., ge=1, le=6, description="Heading level (1-6)")
-    content: str = Field(..., description="Heading content")
-
-    def to_str(self) -> str:
-        lines = self.content.split("\n")
-        lines = filter(lambda x: len(x) > 0, lines)
-        content = " ".join(lines)
-
-        return f"{'#' * self.level} {content}"
-
-
 class Paragraph(MarkdownElement):
     """Paragraph element containing multiple text elements."""
 
@@ -67,6 +53,23 @@ class Paragraph(MarkdownElement):
                     content_parts.append(" ")
             content_parts.append(part)
         return "".join(content_parts)
+
+
+class Heading(MarkdownElement):
+    """Heading element (H1-H6)."""
+
+    level: int = Field(..., ge=1, le=6, description="Heading level (1-6)")
+    content: str | Paragraph = Field(..., description="Heading content")
+
+    def to_str(self) -> str:
+        if isinstance(self.content, Paragraph):
+            content = self.content.to_str()
+        else:
+            lines = self.content.split("\n")
+            lines = filter(lambda x: len(x) > 0, lines)
+            content = " ".join(lines)
+
+        return f"{'#' * self.level} {content}"
 
 
 class Link(MarkdownElement):
