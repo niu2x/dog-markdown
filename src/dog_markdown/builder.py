@@ -4,7 +4,7 @@ Provides a fluent interface for building documents without directly creating mod
 """
 
 from __future__ import annotations
-from typing import List
+from typing import List, Optional
 from .models import (
     Document,
     Heading,
@@ -25,7 +25,8 @@ class MarkdownBuilder:
 
     def __init__(self):
         self._children = []
-        self._current_list_items = []
+        self._list_stack: List[List[ListItem]] = []
+        self._current_list_items: List[ListItem] = []
 
     def add_heading(self, level: int, content: str) -> MarkdownBuilder:
         """Add a heading to the document.
@@ -106,22 +107,41 @@ class MarkdownBuilder:
         return self
 
     def add_blockquote(
-        self, content: str | List[str | Text | Link | Image | Paragraph]
+        self,
+        content: str
+        | Document
+        | List[
+            str
+            | Text
+            | Link
+            | Image
+            | Paragraph
+            | UnorderedList
+            | CodeBlock
+            | Blockquote
+            | Table
+        ],
     ) -> MarkdownBuilder:
         """Add a blockquote to the document.
 
         Args:
-            content: Quote content as string or list of elements
+            content: Quote content as string, document, or list of elements
         """
-        if isinstance(content, str):
-            content = [content]
-
         doc_children = []
-        for item in content:
-            if isinstance(item, str):
-                doc_children.append(Paragraph(children=[Text(content=item)]))
-            else:
-                doc_children.append(item)
+
+        if isinstance(content, str):
+            doc_children.append(Paragraph(children=[Text(content=content)]))
+        elif isinstance(content, Document):
+            doc_children.extend(content.children)
+        else:
+            for item in content:
+                if isinstance(item, str):
+                    doc_children.append(Paragraph(children=[Text(content=item)]))
+                elif isinstance(item, Document):
+                    doc_children.extend(item.children)
+                else:
+                    doc_children.append(item)
+
         self._children.append(Blockquote(content=Document(children=doc_children)))
         return self
 
@@ -142,12 +162,22 @@ class MarkdownBuilder:
         return self
 
     def start_list(self) -> MarkdownBuilder:
-        """Start an unordered list."""
+        """Start an unordered list.
+
+        If already inside a list, this will create a nested list inside the current list item.
+        """
+        # If we're already inside a list, push current list to stack
+        if self._current_list_items:
+            self._list_stack.append(self._current_list_items)
         self._current_list_items = []
         return self
 
     def add_list_item(
-        self, content: str | List[str | Text | Link | Image | Paragraph]
+        self,
+        content: str
+        | Paragraph
+        | Document
+        | List[str | Text | Link | Image | Paragraph],
     ) -> MarkdownBuilder:
         """Add an item to the current list.
 
@@ -156,6 +186,10 @@ class MarkdownBuilder:
         """
         if isinstance(content, str):
             doc = Document(children=[Paragraph(children=[Text(content=content)])])
+        elif isinstance(content, Paragraph):
+            doc = Document(children=[content])
+        elif isinstance(content, Document):
+            doc = content
         else:
             # If it's a list of elements, wrap them in a single paragraph
             paragraph_children = []
@@ -172,10 +206,27 @@ class MarkdownBuilder:
         return self
 
     def end_list(self) -> MarkdownBuilder:
-        """End the current list and add it to the document."""
-        if self._current_list_items:
-            self._children.append(UnorderedList(items=self._current_list_items))
-            self._current_list_items = []
+        """End the current list and add it to the document or parent list item."""
+        if not self._current_list_items:
+            return self
+
+        # Create the list
+        current_list = UnorderedList(items=self._current_list_items)
+        self._current_list_items = []
+
+        if self._list_stack:
+            # If we have a parent list, add this list as a child of the last item
+            parent_items = self._list_stack.pop()
+            if parent_items:
+                last_item = parent_items[-1]
+                # Append the nested list to the last item's content
+                new_children = list(last_item.content.children)
+                new_children.append(current_list)
+                parent_items[-1] = ListItem(content=Document(children=new_children))
+                self._current_list_items = parent_items
+        else:
+            # Otherwise add to main document
+            self._children.append(current_list)
         return self
 
     def build(self) -> Document:
