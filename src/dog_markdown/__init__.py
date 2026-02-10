@@ -1,5 +1,16 @@
+"""
+dog-markdown: A type-safe Markdown generator for Python using Pydantic.
+
+Design Decisions:
+- Uses Pydantic models for type safety and validation
+- ListItem accepts full Document objects for maximum flexibility in nested content
+- Automatic space handling in Paragraph prevents awkward spacing between elements
+- Multi-line content is merged into single paragraphs for clean output
+- Nested elements are properly indented for valid Markdown structure
+"""
+
 from __future__ import annotations
-from typing import List, Union, Optional
+from typing import List
 from pydantic import BaseModel, Field
 
 
@@ -20,7 +31,6 @@ class Text(MarkdownElement):
 
     def to_str(self) -> str:
         lines = self.content.split("\n")
-        # lines = map(lambda x: x.strip(), lines)
         lines = filter(lambda x: len(x) > 0, lines)
         content = " ".join(lines)
         return content
@@ -33,9 +43,7 @@ class Heading(MarkdownElement):
     content: str = Field(..., description="Heading content")
 
     def to_str(self) -> str:
-
         lines = self.content.split("\n")
-        # lines = map(lambda x: x.strip(), lines)
         lines = filter(lambda x: len(x) > 0, lines)
         content = " ".join(lines)
 
@@ -45,10 +53,20 @@ class Heading(MarkdownElement):
 class Paragraph(MarkdownElement):
     """Paragraph element containing multiple text elements."""
 
-    children: List[Text | Link] = Field(..., description="Paragraph content")
+    children: List[Text | Link | Image] = Field(..., description="Paragraph content")
 
     def to_str(self) -> str:
-        return f"{''.join(child.to_str() for child in self.children)}"
+        content_parts = []
+        for child in self.children:
+            part = child.to_str()
+            if content_parts and not part.startswith(
+                (" ", ".", ",", "!", "?", ":", ";", ")", "]", "}")
+            ):
+                last_char = content_parts[-1][-1] if content_parts[-1] else ""
+                if not last_char.endswith((" ", "(", "[", "{", "<")):
+                    content_parts.append(" ")
+            content_parts.append(part)
+        return "".join(content_parts)
 
 
 class Link(MarkdownElement):
@@ -62,6 +80,19 @@ class Link(MarkdownElement):
         if self.title:
             return f'[{self.text}]({self.url} "{self.title}")'
         return f"[{self.text}]({self.url})"
+
+
+class Image(MarkdownElement):
+    """Image element."""
+
+    alt: str = Field(..., description="Alternative text for accessibility")
+    url: str = Field(..., description="Image URL or path")
+    title: str | None = Field(None, description="Image tooltip title")
+
+    def to_str(self) -> str:
+        if self.title:
+            return f'![{self.alt}]({self.url} "{self.title}")'
+        return f"![{self.alt}]({self.url})"
 
 
 class ListItem(MarkdownElement):
@@ -94,7 +125,7 @@ class CodeBlock(MarkdownElement):
     """Code block element with optional syntax highlighting."""
 
     content: str = Field(..., description="Code content")
-    language: Optional[str] = Field(
+    language: str | None = Field(
         None, description="Programming language for syntax highlighting"
     )
 
@@ -104,12 +135,70 @@ class CodeBlock(MarkdownElement):
         return "```\n" + self.content + "\n```"
 
 
+class Blockquote(MarkdownElement):
+    """Blockquote element for quoted text."""
+
+    content: str | Document = Field(..., description="Quote content")
+
+    def to_str(self) -> str:
+        if isinstance(self.content, Document):
+            content_str = self.content.to_str()
+            lines = content_str.split("\n")
+            quoted_lines = [f"> {line}" if line.strip() else ">" for line in lines]
+            return "\n".join(quoted_lines)
+        else:
+            lines = self.content.split("\n")
+            quoted_lines = [f"> {line}" if line.strip() else ">" for line in lines]
+            return "\n".join(quoted_lines)
+
+
+class Table(MarkdownElement):
+    """Table element with rows and columns."""
+
+    headers: List[str] = Field(..., description="Table column headers")
+    rows: List[List[str | Text | Link | Image]] = Field(..., description="Table rows")
+    align: List[str | None] | None = Field(
+        None, description="Column alignment (left, center, right)"
+    )
+
+    def to_str(self) -> str:
+        # Create header row
+        header_row = f"| {' | '.join(self.headers)} |"
+
+        # Create separator row
+        if self.align:
+            separator_cols = []
+            for a in self.align:
+                if a == "center":
+                    separator_cols.append(":---:")
+                elif a == "right":
+                    separator_cols.append("---:")
+                else:  # left or None
+                    separator_cols.append("---")
+        else:
+            separator_cols = ["---"] * len(self.headers)
+        separator_row = f"| {' | '.join(separator_cols)} |"
+
+        # Create data rows
+        data_rows = []
+        for row in self.rows:
+            cells = []
+            for cell in row:
+                if isinstance(cell, (Text, Link, Image)):
+                    cells.append(cell.to_str())
+                else:
+                    cells.append(str(cell))
+            data_rows.append(f"| {' | '.join(cells)} |")
+
+        return "\n".join([header_row, separator_row] + data_rows)
+
+
 class Document(MarkdownElement):
     """Top-level Markdown document."""
 
-    children: List[Union[Heading, Paragraph, UnorderedList, CodeBlock]] = Field(
-        ..., description="Document content"
-    )
+    children: List[
+        Heading | Paragraph | UnorderedList | CodeBlock | Blockquote | Table
+    ] = Field(..., description="Document content")
 
     def to_str(self) -> str:
         return "\n\n".join(child.to_str() for child in self.children)

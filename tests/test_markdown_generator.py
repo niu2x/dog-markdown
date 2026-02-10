@@ -8,6 +8,9 @@ from dog_markdown import (
     ListItem,
     CodeBlock,
     Link,
+    Image,
+    Blockquote,
+    Table,
 )
 
 
@@ -61,6 +64,37 @@ class TestMarkdownGeneration:
 
         link2 = Link(text="Example", url="https://example.com", title="Example Website")
         assert link2.to_str() == '[Example](https://example.com "Example Website")'
+
+    def test_image_to_str(self):
+        image1 = Image(alt="Dog picture", url="https://example.com/dog.jpg")
+        assert image1.to_str() == "![Dog picture](https://example.com/dog.jpg)"
+
+        image2 = Image(
+            alt="Cat picture", url="https://example.com/cat.jpg", title="Cute cat"
+        )
+        assert (
+            image2.to_str() == '![Cat picture](https://example.com/cat.jpg "Cute cat")'
+        )
+
+    def test_paragraph_with_image_to_str(self):
+        paragraph = Paragraph(
+            children=[
+                Text(content="Check out our "),
+                Image(alt="Product image", url="https://example.com/product.jpg"),
+                Text(content=" or see our "),
+                Image(
+                    alt="Logo", url="https://example.com/logo.png", title="Company logo"
+                ),
+                Text(content="."),
+            ]
+        )
+
+        expected = (
+            "Check out our ![Product image](https://example.com/product.jpg) "
+            'or see our ![Logo](https://example.com/logo.png "Company logo").'
+        )
+
+        assert paragraph.to_str() == expected
 
     def test_unordered_list_to_str(self):
         list_ = UnorderedList(
@@ -171,6 +205,91 @@ class TestMarkdownGeneration:
 
         code2 = CodeBlock(content="echo 'hello'")
         assert code2.to_str() == "```\necho 'hello'\n```"
+
+    def test_blockquote_to_str(self):
+        # Basic blockquote
+        quote1 = Blockquote(content="This is a quote")
+        assert quote1.to_str() == "> This is a quote"
+
+        # Multi-line blockquote
+        quote2 = Blockquote(content="Line 1\nLine 2\n\nLine 3")
+        assert quote2.to_str() == "> Line 1\n> Line 2\n>\n> Line 3"
+
+        # Blockquote with Document content
+        quote3 = Blockquote(
+            content=Document(
+                children=[
+                    Paragraph(children=[Text(content="Nested quote")]),
+                    UnorderedList(
+                        items=[
+                            ListItem(
+                                content=Document(
+                                    children=[
+                                        Paragraph(children=[Text(content="Item 1")])
+                                    ]
+                                )
+                            ),
+                            ListItem(
+                                content=Document(
+                                    children=[
+                                        Paragraph(children=[Text(content="Item 2")])
+                                    ]
+                                )
+                            ),
+                        ]
+                    ),
+                ]
+            )
+        )
+
+        expected_quote3 = "> Nested quote\n>\n> - Item 1\n>\n> - Item 2"
+        assert quote3.to_str() == expected_quote3
+
+    def test_table_to_str(self):
+        # Basic table
+        table1 = Table(
+            headers=["Name", "Age", "City"],
+            rows=[["Alice", "30", "New York"], ["Bob", "25", "London"]],
+        )
+
+        expected_table1 = (
+            "| Name | Age | City |\n"
+            "| --- | --- | --- |\n"
+            "| Alice | 30 | New York |\n"
+            "| Bob | 25 | London |"
+        )
+        assert table1.to_str() == expected_table1
+
+        # Table with alignment
+        table2 = Table(
+            headers=["Left", "Center", "Right"],
+            rows=[["a", "b", "c"]],
+            align=["left", "center", "right"],
+        )
+
+        expected_table2 = (
+            "| Left | Center | Right |\n| --- | :---: | ---: |\n| a | b | c |"
+        )
+        assert table2.to_str() == expected_table2
+
+        # Table with rich content
+        table3 = Table(
+            headers=["Item", "Link", "Image"],
+            rows=[
+                [
+                    "Product",
+                    Link(text="Website", url="https://example.com"),
+                    Image(alt="Product image", url="https://example.com/img.jpg"),
+                ]
+            ],
+        )
+
+        expected_table3 = (
+            "| Item | Link | Image |\n"
+            "| --- | --- | --- |\n"
+            "| Product | [Website](https://example.com) | ![Product image](https://example.com/img.jpg) |"
+        )
+        assert table3.to_str() == expected_table3
 
     def test_full_document_to_str(self):
         doc = Document(
