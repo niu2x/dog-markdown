@@ -158,10 +158,13 @@ class UnorderedList(MarkdownElement):
     """Unordered (bullet) list."""
 
     items: List[ListItem] = Field(..., description="List items")
+    indent: int = 1
 
     def to_str(self) -> str:
-        items_str = "\n\n".join(item.to_str() for item in self.items)
-        return items_str.strip()
+        items_str = "\n\n".join(
+            "  " * (self.indent - 1) + item.to_str() for item in self.items
+        )
+        return items_str
 
 
 class CodeBlock(MarkdownElement):
