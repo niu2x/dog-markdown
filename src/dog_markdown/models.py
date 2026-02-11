@@ -10,6 +10,7 @@ Design Decisions:
 """
 
 from __future__ import annotations
+import urllib.parse
 from typing import List
 from pydantic import BaseModel, Field
 
@@ -53,6 +54,11 @@ def remove_consecutive_blank_lines(text, max_consecutive=2):
     result = result.strip("\n")
 
     return result
+
+
+def _encode_url(url: str) -> str:
+    """Encode URL while preserving special characters."""
+    return urllib.parse.quote(url, safe=":/?#[]@!$&'()*+,;=")
 
 
 class MarkdownElement(BaseModel):
@@ -121,9 +127,10 @@ class Link(MarkdownElement):
     title: str | None = Field(None, description="Link tooltip title")
 
     def to_str(self) -> str:
+        encoded_url = _encode_url(self.url)
         if self.title:
-            return f'[{self.text}]({self.url} "{self.title}")'
-        return f"[{self.text}]({self.url})"
+            return f'[{self.text}]({encoded_url} "{self.title}")'
+        return f"[{self.text}]({encoded_url})"
 
 
 class Image(MarkdownElement):
@@ -134,9 +141,10 @@ class Image(MarkdownElement):
     title: str | None = Field(None, description="Image tooltip title")
 
     def to_str(self) -> str:
+        encoded_url = _encode_url(self.url)
         if self.title:
-            return f'![{self.alt}]({self.url} "{self.title}")'
-        return f"![{self.alt}]({self.url})"
+            return f'![{self.alt}]({encoded_url} "{self.title}")'
+        return f"![{self.alt}]({encoded_url})"
 
 
 class ListItem(MarkdownElement):
