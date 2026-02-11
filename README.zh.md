@@ -1,29 +1,29 @@
 # dog-markdown
 
-A type-safe Markdown generator for Python, built with Pydantic.
+一个使用 Pydantic 构建的类型安全的 Python Markdown 生成器。
 
-## Features
+## 特性
 
-- **Type-safe**: Uses Pydantic models to ensure valid Markdown structure
-- **Extensible**: Easy to add new Markdown elements
-- **Human-friendly**: Automatic spacing and formatting
-- **Nested elements**: Supports deeply nested structures like nested blockquotes
+- **类型安全**：使用 Pydantic 模型确保有效的 Markdown 结构
+- **可扩展**：轻松添加新的 Markdown 元素
+- **人性化**：自动处理间距和格式化
+- **嵌套元素**：支持深度嵌套结构，如嵌套块引用
 
-## Installation
+## 安装
 
 ```bash
 uv add dog-markdown
 ```
 
-## API Documentation
+## API 文档
 
-### Core Model API
+### 核心模型 API
 
-Create structured Markdown documents using Pydantic models directly.
+直接使用 Pydantic 模型创建结构化的 Markdown 文档。
 
 #### Document
 
-Top-level document container that holds multiple Markdown elements.
+顶级文档容器，包含多个 Markdown 元素。
 
 ```python
 from dog_markdown import Document, Heading, Paragraph, Text
@@ -38,23 +38,23 @@ doc = Document(
 print(doc.to_str())
 ```
 
-**Parameters**:
-- `children`: List of Markdown elements contained in the document. Supports `Heading`, `Paragraph`, `UnorderedList`, `CodeBlock`, `Blockquote`, `Table`, `Document`
+**参数**:
+- `children`: 文档包含的 Markdown 元素列表，支持 `Heading`, `Paragraph`, `UnorderedList`, `CodeBlock`, `Blockquote`, `Table`, `Document`
 
-**Methods**:
-- `to_str()`: Convert document to Markdown string
+**方法**:
+- `to_str()`: 将文档转换为 Markdown 字符串
 
 #### Heading
 
-Heading element supporting levels H1-H9.
+标题元素，支持 H1-H9 级别。
 
 ```python
 from dog_markdown import Heading
 
-# Basic usage
+# 基础用法
 heading = Heading(level=2, content="Section Title")
 
-# Using Paragraph as content (supports rich text)
+# 使用 Paragraph 作为内容（支持富文本）
 from dog_markdown import Paragraph, Text, Link
 heading = Heading(
     level=3,
@@ -66,21 +66,21 @@ heading = Heading(
 )
 ```
 
-**Parameters**:
-- `level`: Heading level (1-9)
-- `content`: Heading content, supports string or `Paragraph` object
+**参数**:
+- `level`: 标题级别 (1-9)
+- `content`: 标题内容，支持字符串或 `Paragraph` 对象
 
 #### Paragraph
 
-Paragraph element that can contain text, links, and images.
+段落元素，可包含文本、链接和图片。
 
 ```python
 from dog_markdown import Paragraph, Text, Link, Image
 
-# Basic text paragraph
+# 基础文本段落
 paragraph = Paragraph(children=[Text(content="Simple text paragraph")])
 
-# Rich text paragraph
+# 富文本段落
 paragraph = Paragraph(children=[
     Text(content="Visit our "),
     Link(text="website", url="https://example.com"),
@@ -89,73 +89,73 @@ paragraph = Paragraph(children=[
 ])
 ```
 
-**Parameters**:
-- `children`: List of paragraph content. Supports `Text`, `Link`, `Image`
+**参数**:
+- `children`: 段落内容列表，支持 `Text`, `Link`, `Image`
 
 #### Text
 
-Plain text element with optional bold formatting.
+普通文本元素，支持加粗。
 
 ```python
 from dog_markdown import Text
 
-# Plain text
+# 普通文本
 text = Text(content="Plain text")
 
-# Bold text
+# 加粗文本
 bold_text = Text(content="Important note", bold=True)
 ```
 
-**Parameters**:
-- `content`: Text content
-- `bold`: Whether to render text as bold (default: False)
+**参数**:
+- `content`: 文本内容
+- `bold`: 是否加粗 (默认: False)
 
 #### Link
 
-Hyperlink element.
+超链接元素。
 
 ```python
 from dog_markdown import Link
 
-# Basic link
+# 基础链接
 link = Link(text="Click me", url="https://example.com")
 
-# Link with title
+# 带标题的链接
 link = Link(text="Download", url="/file.pdf", title="Download PDF document")
 ```
 
-**Parameters**:
-- `text`: Link display text
-- `url`: Target URL
-- `title`: Optional tooltip title displayed on hover
+**参数**:
+- `text`: 链接显示文本
+- `url`: 目标 URL
+- `title`: 可选，链接悬停时显示的标题
 
 #### Image
 
-Image element with support for alternative text and titles.
+图片元素，支持替代文本和标题。
 
 ```python
 from dog_markdown import Image
 
-# Basic image
+# 基础图片
 image = Image(alt="Cat picture", url="/cat.jpg")
 
-# Image with title
+# 带标题的图片
 image = Image(alt="Dog picture", url="/dog.jpg", title="A cute dog")
 ```
 
-**Parameters**:
-- `alt`: Alternative text for accessibility
-- `url`: Image URL or path
-- `title`: Optional tooltip title displayed on hover
+**参数**:
+- `alt`: 替代文本（无障碍支持）
+- `url`: 图片 URL 或路径
+- `title`: 可选，图片悬停时显示的标题
 
 #### UnorderedList
 
-Unordered (bullet) list.
+无序列表（项目符号列表）。
 
 ```python
 from dog_markdown import UnorderedList, ListItem, Document, Paragraph, Text
 
-# Simple list
+# 简单列表
 list = UnorderedList(
     items=[
         ListItem(content=Document(children=[Paragraph(children=[Text(content="Item 1")])])),
@@ -163,7 +163,7 @@ list = UnorderedList(
     ]
 )
 
-# Nested list
+# 嵌套列表
 nested_list = UnorderedList(
     items=[
         ListItem(content=Document(children=[
@@ -179,13 +179,13 @@ nested_list = UnorderedList(
 )
 ```
 
-**Parameters**:
-- `items`: List of `ListItem` objects
-- `indent`: Indentation level (default: 1)
+**参数**:
+- `items`: 列表项 `ListItem` 对象列表
+- `indent`: 缩进级别 (默认: 1)
 
 #### ListItem
 
-List item element.
+列表项元素。
 
 ```python
 from dog_markdown import ListItem, Document, Paragraph, Text
@@ -195,43 +195,43 @@ list_item = ListItem(
 )
 ```
 
-**Parameters**:
-- `content`: List item content, a `Document` object
+**参数**:
+- `content`: 列表项内容，`Document` 对象
 
 #### CodeBlock
 
-Code block element with optional syntax highlighting.
+代码块元素，支持语法高亮。
 
 ```python
 from dog_markdown import CodeBlock
 
-# Basic code block
+# 基础代码块
 code_block = CodeBlock(content="print('Hello World')")
 
-# Code block with syntax highlighting
+# 带语法高亮的代码块
 python_code = CodeBlock(
     content="def add(a, b):\n    return a + b",
     language="python"
 )
 ```
 
-**Parameters**:
-- `content`: Code content
-- `language`: Optional programming language name for syntax highlighting
+**参数**:
+- `content`: 代码内容
+- `language`: 可选，编程语言名称（用于语法高亮）
 
 #### Blockquote
 
-Blockquote element that supports nesting.
+块引用元素，支持嵌套。
 
 ```python
 from dog_markdown import Blockquote, Document, Paragraph, Text
 
-# Basic quote
+# 基础引用
 quote = Blockquote(
     content=Document(children=[Paragraph(children=[Text(content="To be or not to be")])])
 )
 
-# Nested quote
+# 嵌套引用
 nested_quote = Blockquote(
     content=Document(children=[
         Paragraph(children=[Text(content="Outer quote")]),
@@ -242,17 +242,17 @@ nested_quote = Blockquote(
 )
 ```
 
-**Parameters**:
-- `content`: Quote content, a `Document` object
+**参数**:
+- `content`: 引用内容，`Document` 对象
 
 #### Table
 
-Table element with support for column alignment.
+表格元素，支持列对齐。
 
 ```python
 from dog_markdown import Table
 
-# Basic table
+# 基础表格
 table = Table(
     headers=["Name", "Age", "Email"],
     rows=[
@@ -261,7 +261,7 @@ table = Table(
     ]
 )
 
-# Table with alignment
+# 带对齐的表格
 table = Table(
     headers=["Name", "Age", "Email"],
     rows=[
@@ -271,7 +271,7 @@ table = Table(
     align=["left", "center", "right"]
 )
 
-# Rich text table
+# 富文本表格
 table = Table(
     headers=["Product", "Link", "Image"],
     rows=[
@@ -284,16 +284,16 @@ table = Table(
 )
 ```
 
-**Parameters**:
-- `headers`: List of table column headers
-- `rows`: List of table data rows. Each cell supports strings, `Text`, `Link`, `Image`
-- `align`: Optional list of column alignments. Supports `left`, `center`, `right`. Defaults to left alignment.
+**参数**:
+- `headers`: 表格列头列表
+- `rows`: 表格行数据列表，每个单元格支持字符串、`Text`, `Link`, `Image`
+- `align`: 可选，列对齐方式列表，支持 `left`, `center`, `right`，默认左对齐
 
 ### Builder API
 
-Fluent API for building Markdown documents procedurally, ideal for programmatic creation.
+使用流畅的链式调用 API 构建 Markdown 文档，更适合程序化创建。
 
-#### Basic Usage
+#### 基础用法
 
 ```python
 from dog_markdown import MarkdownBuilder
@@ -308,9 +308,9 @@ doc = builder
 print(doc.to_str())
 ```
 
-#### Quick Start
+#### 快捷创建
 
-Use the `markdown()` function to quickly create a Builder:
+使用 `markdown()` 函数快速创建 Builder:
 
 ```python
 from dog_markdown import markdown
@@ -321,17 +321,17 @@ doc = markdown()
     .to_str()
 ```
 
-#### Rich Text Paragraphs
+#### 富文本段落
 
 ```python
-# Basic usage
+# 基础用法
 builder.add_paragraph([
     "Visit our ",
     builder.link("website", "https://example.com"),
     " for more info"
 ])
 
-# Create complex paragraphs using context managers
+# 使用上下文管理器创建复杂段落
 with builder.paragraph():
     builder.add_bold_text("Note:")
     builder.add_text(" This is a ")
@@ -340,47 +340,47 @@ with builder.paragraph():
     builder.add_link("links", "https://example.com")
 ```
 
-#### List Operations
+#### 列表操作
 
-Use `add_paragraph` directly within lists to simplify API usage:
+使用 `add_paragraph` 直接在列表中添加段落，简化 API 使用:
 
 ```python
-# Create lists using context managers
+# 使用上下文管理器创建列表
 with builder.unordered_list():
-    # Simple list item
+    # 简单列表项
     builder.add_paragraph("Simple list item")
     
-    # Rich text list item
+    # 富文本列表项
     with builder.paragraph():
         builder.add_text("Item with a ")
         builder.add_link("link", "https://example.com")
         builder.add_text(" and ")
         builder.add_bold_text("bold text")
     
-    # Complex list item with multiple paragraphs
+    # 复杂列表项（包含多个段落）
     with builder.paragraph():
         builder.add_bold_text("Multi-paragraph item:")
     builder.add_paragraph("This is the first paragraph")
     builder.add_paragraph("This is the second paragraph")
     
-    # Nested lists
+    # 嵌套列表
     with builder.unordered_list():
         builder.add_paragraph("Nested item 1")
         builder.add_paragraph("Nested item 2")
 ```
 
-#### Complex Document Example
+#### 复杂文档示例
 
 ```python
 from dog_markdown import MarkdownBuilder
 
 builder = MarkdownBuilder()
 
-# Create document title and description
+# 创建文档标题和描述
 builder.add_heading(1, "My Project")
 builder.add_paragraph("A type-safe Markdown generator for Python")
 
-# Add features list
+# 添加特性列表
 builder.add_heading(2, "Features")
 with builder.unordered_list():
     with builder.paragraph():
@@ -393,21 +393,21 @@ with builder.unordered_list():
     
     builder.add_paragraph("Human-friendly automatic spacing and formatting")
 
-# Add code example
+# 添加代码示例
 builder.add_heading(2, "Example")
 builder.add_code_block(
     "def hello():\n    print('Hello World!')",
     language="python"
 )
 
-# Add blockquote
+# 添加引用
 builder.add_blockquote([
     "This is a blockquote",
     builder.paragraph("It supports multiple paragraphs and "),
     builder.paragraph(["even ", builder.bold_text("bold text"), " or ", builder.link("links", "https://example.com")])
 ])
 
-# Add table
+# 添加表格
 builder.add_table(
     headers=["Feature", "Supported", "Description"],
     rows=[
@@ -418,43 +418,43 @@ builder.add_table(
     align=["left", "center", "left"]
 )
 
-# Output result
+# 输出结果
 print(builder.to_str())
 ```
 
-#### Builder Method Reference
+#### Builder 方法参考
 
-##### Document Structure
+##### 文档结构
 
-- `add_heading(level: int, content: str | Paragraph)`: Add a heading
-- `add_paragraph(content: str | List[str | Text | Link | Image] | Paragraph)`: Add a paragraph
-- `add_code_block(content: str, language: str | None = None)`: Add a code block
-- `add_blockquote(content: str | Document | List[...])`: Add a blockquote
-- `add_table(headers: List[str], rows: List[List[...]], align: List[str | None] | None = None)`: Add a table
-- `build()`: Build and return the final `Document`
-- `to_str()`: Build and return the document as a Markdown string
+- `add_heading(level: int, content: str | Paragraph)`: 添加标题
+- `add_paragraph(content: str | List[str | Text | Link | Image] | Paragraph)`: 添加段落
+- `add_code_block(content: str, language: str | None = None)`: 添加代码块
+- `add_blockquote(content: str | Document | List[...])`: 添加块引用
+- `add_table(headers: List[str], rows: List[List[...]], align: List[str | None] | None = None)`: 添加表格
+- `build()`: 构建并返回 `Document` 对象
+- `to_str()`: 直接生成并返回 Markdown 字符串
 
-##### List Operations
+##### 列表操作
 
-- `start_unordered_list()`: Start an unordered list
-- `end_unordered_list()`: End the current unordered list
-- `unordered_list()`: Return a list context manager
+- `start_unordered_list()`: 开始无序列表
+- `end_unordered_list()`: 结束当前无序列表
+- `unordered_list()`: 返回列表上下文管理器
 
-##### Context Managers
+##### 上下文管理器
 
-- `paragraph()`: Context manager for creating complex rich text paragraphs
-- `unordered_list()`: Context manager for creating nested lists
+- `paragraph()`: 段落上下文管理器，用于创建复杂富文本段落
+- `unordered_list()`: 列表上下文管理器，用于创建各级列表
 
-##### Text Elements
+##### 文本元素
 
-- `add_link(text: str, url: str, title: str | None = None)`: Create a link element (for nesting in paragraphs)
-- `add_image(alt: str, url: str, title: str | None = None)`: Create an image element (for nesting in paragraphs)
-- `add_text(content: str)`: Create a plain text element (for nesting in paragraphs)
-- `add_bold_text(content: str)`: Create a bold text element (for nesting in paragraphs)
+- `add_link(text: str, url: str, title: str | None = None)`: 创建链接元素（用于在段落中嵌套）
+- `add_image(alt: str, url: str, title: str | None = None)`: 创建图片元素（用于在段落中嵌套）
+- `add_text(content: str)`: 创建普通文本元素（用于在段落中嵌套）
+- `add_bold_text(content: str)`: 创建加粗文本元素（用于在段落中嵌套）
 
-## Advanced Usage
+## 高级用法
 
-### Nested Elements
+### 嵌套元素
 
 ```python
 from dog_markdown import Document, Heading, Blockquote, Paragraph, Text, UnorderedList, ListItem
@@ -479,16 +479,16 @@ doc = Document(
 )
 ```
 
-### Generating Complex Documents
+### 生成复杂文档
 
-Combine Builder API context managers to create very complex document structures:
+结合 Builder API 的上下文管理器可以创建非常复杂的文档结构:
 
 ```python
 from dog_markdown import MarkdownBuilder
 
 builder = MarkdownBuilder()
 
-# Create technical documentation
+# 创建技术文档
 builder.add_heading(1, "API Documentation")
 
 builder.add_heading(2, "Introduction")
@@ -525,9 +525,9 @@ with builder.unordered_list():
 print(builder.to_str())
 ```
 
-## Output Example
+## 输出示例
 
-The following code:
+以下代码:
 
 ```python
 from dog_markdown import markdown
@@ -555,7 +555,7 @@ md = markdown()
 print(md)
 ```
 
-Will generate:
+将生成:
 
 ```markdown
 # My Project
@@ -575,7 +575,7 @@ A type-safe Markdown generator for Python
 | Nested elements | ✅ |
 ```
 
-## Development
+## 开发
 
 ### Setup
 
@@ -601,6 +601,6 @@ uv run ruff check .
 uv run ruff format .
 ```
 
-## License
+## 许可证
 
 MIT
