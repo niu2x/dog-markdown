@@ -14,6 +14,47 @@ from typing import List
 from pydantic import BaseModel, Field
 
 
+def remove_consecutive_blank_lines(text, max_consecutive=2):
+    """
+    删除文本中连续的空白行，最多保留指定数量的空白行
+
+    参数:
+        text (str): 输入文本
+        max_consecutive (int): 最多保留的连续空白行数，默认为2
+
+    返回:
+        str: 处理后的文本
+    """
+    lines = text.splitlines()
+    result_lines = []
+    consecutive_blank_count = 0
+
+    for line in lines:
+        # 检查当前行是否为空行（strip后为空）
+        is_blank = line.strip() == ""
+
+        if not is_blank:
+            # 非空行直接保留，并重置空白行计数器
+            result_lines.append(line)
+            consecutive_blank_count = 0
+        else:
+            # 空行处理
+            consecutive_blank_count += 1
+
+            if consecutive_blank_count <= max_consecutive:
+                # 保留空白行，但不超过最大限制
+                result_lines.append("")
+            # 否则跳过这个空白行
+
+    # 将处理后的行重新组合成文本
+    result = "\n".join(result_lines)
+
+    # 可选：去除开头和结尾的空白行
+    result = result.strip("\n")
+
+    return result
+
+
 class MarkdownElement(BaseModel):
     """Base class for all Markdown elements."""
 
@@ -198,4 +239,6 @@ class Document(MarkdownElement):
     ] = Field(..., description="Document content")
 
     def to_str(self) -> str:
-        return "\n\n".join(child.to_str() for child in self.children)
+        return remove_consecutive_blank_lines(
+            "\n\n".join(child.to_str() for child in self.children)
+        )
