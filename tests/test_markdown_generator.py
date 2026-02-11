@@ -396,6 +396,31 @@ class TestMarkdownGeneration:
 
         assert doc.to_str() == expected
 
+        doc = Document(
+            children=[
+                Heading(level=1, content="My Document"),
+                UnorderedList(
+                    items=[
+                        ListItem(
+                            content=Document(
+                                children=[
+                                    Paragraph(
+                                        children=[
+                                            Text(content="Welcome to my\nxxxx"),
+                                        ]
+                                    )
+                                ]
+                            )
+                        )
+                    ]
+                ),
+            ]
+        )
+
+        expected = "# My Document\n\n- Welcome to my\n  xxxx"
+
+        assert doc.to_str() == expected
+
     def test_nested_blockquote_to_str(self):
         doc = Document(
             children=[
