@@ -221,7 +221,6 @@ class MarkdownBuilder:
 
         return self
 
-
     def end_unordered_list(self) -> MarkdownBuilder:
         """End the current unordered list and add it to the document or parent list item."""
         # Create the list
@@ -231,7 +230,11 @@ class MarkdownBuilder:
         for x in items:
             if isinstance(x, Document):
                 list_items.append(ListItem(content=x))
-            elif isinstance(x, Paragraph) or isinstance(x, CodeBlock):
+            elif (
+                isinstance(x, Paragraph)
+                or isinstance(x, CodeBlock)
+                or isinstance(x, UnorderedList)
+            ):
                 list_items.append(ListItem(content=Document(children=[x])))
             else:
                 raise Exception(f"unexpected item {x}")
