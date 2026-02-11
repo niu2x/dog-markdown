@@ -71,10 +71,10 @@ class Text(MarkdownElement):
     content: str = Field(..., description="Plain text content")
 
     def to_str(self) -> str:
-        lines = self.content.split("\n")
-        lines = filter(lambda x: len(x) > 0, lines)
-        content = " ".join(lines)
-        return content
+        # lines = self.content.split("\n")
+        # lines = filter(lambda x: len(x) > 0, lines)
+        # content = " ".join(lines)
+        return self.content
 
 
 class Paragraph(MarkdownElement):
