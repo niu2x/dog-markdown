@@ -161,9 +161,7 @@ class UnorderedList(MarkdownElement):
     indent: int = 1
 
     def to_str(self) -> str:
-        items_str = "\n\n".join(
-            item.to_str() for item in self.items
-        )
+        items_str = "\n\n".join(item.to_str() for item in self.items)
 
         lines = items_str.split("\n")
         lines = map(lambda x: "  " * (self.indent - 1) + x, lines)
