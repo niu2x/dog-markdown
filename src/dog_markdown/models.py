@@ -240,7 +240,7 @@ class Document(MarkdownElement):
     """Top-level Markdown document."""
 
     children: List[
-        Heading | Paragraph | UnorderedList | CodeBlock | Blockquote | Table
+        Heading | Paragraph | UnorderedList | CodeBlock | Blockquote | Table | Document
     ] = Field(..., description="Document content")
 
     def to_str(self) -> str:
