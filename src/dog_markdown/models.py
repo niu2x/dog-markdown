@@ -58,7 +58,7 @@ class Paragraph(MarkdownElement):
 class Heading(MarkdownElement):
     """Heading element (H1-H6)."""
 
-    level: int = Field(..., ge=1, le=6, description="Heading level (1-6)")
+    level: int = Field(..., ge=1, le=9, description="Heading level (1-9)")
     content: str | Paragraph = Field(..., description="Heading content")
 
     def to_str(self) -> str:
