@@ -19,6 +19,9 @@ class TestMarkdownGeneration:
         text = Text(content="Hello world")
         assert text.to_str() == "Hello world"
 
+        text = Text(content="Hello world\ndddd")
+        assert text.to_str() == "Hello world\ndddd"
+
     def test_heading_to_str(self):
         heading = Heading(level=1, content="Main Title")
         assert heading.to_str() == "# Main Title"
@@ -116,7 +119,7 @@ class TestMarkdownGeneration:
                 ),
             ]
         )
-        assert list_.to_str() == "- First item\n\n- Second item\n\n- Third item"
+        assert list_.to_str() == "- First item\n- Second item\n- Third item"
 
         list2_ = UnorderedList(
             indent=2,
@@ -198,7 +201,7 @@ class TestMarkdownGeneration:
 
         expected = (
             "- Parent item\n\n"
-            "  - Child item 1\n\n"
+            "  - Child item 1\n"
             "  - Child item 2\n\n"
             "- Another parent item"
         )
@@ -294,7 +297,7 @@ class TestMarkdownGeneration:
             )
         )
 
-        expected_quote3 = "> Nested quote\n>\n> - Item 1\n>\n> - Item 2"
+        expected_quote3 = "> Nested quote\n>\n> - Item 1\n> - Item 2"
         assert quote3.to_str() == expected_quote3
 
     def test_table_to_str(self):
@@ -385,8 +388,8 @@ class TestMarkdownGeneration:
         expected = (
             "# My Document\n\n"
             "Welcome to my  . \n\n"
-            "- First feature\n\n"
-            "- Second feature\n\n"
+            "- First feature\n"
+            "- Second feature\n"
             "- Third feature\n\n"
             "```python\n"
             "def hello():\n"
@@ -417,7 +420,7 @@ class TestMarkdownGeneration:
             ]
         )
 
-        expected = "# My Document\n\n- Welcome to my\n  xxxx"
+        expected = "# My Document\n\n- Welcome to my  \n  xxxx"
 
         assert doc.to_str() == expected
 

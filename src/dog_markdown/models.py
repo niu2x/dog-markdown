@@ -75,12 +75,13 @@ class Text(MarkdownElement):
     """Plain text element."""
 
     content: str = Field(..., description="Plain text content")
+    bold: bool = Field(default=False, description="Whether to render text as bold")
 
     def to_str(self) -> str:
-        # lines = self.content.split("\n")
-        # lines = filter(lambda x: len(x) > 0, lines)
-        # content = " ".join(lines)
-        return self.content
+        text = self.content
+        if self.bold:
+            text = f"**{text}**"
+        return text
 
 
 class Paragraph(MarkdownElement):
@@ -99,7 +100,11 @@ class Paragraph(MarkdownElement):
                 if not last_char.endswith((" ", "(", "[", "{", "<")):
                     content_parts.append(" ")
             content_parts.append(part)
-        return "".join(content_parts)
+
+        result = "".join(content_parts)
+        result = result.replace("\r", "")
+        result = result.replace("\n", "  \n")
+        return result
 
 
 class Heading(MarkdownElement):
@@ -169,7 +174,10 @@ class UnorderedList(MarkdownElement):
     indent: int = 1
 
     def to_str(self) -> str:
-        items_str = "\n\n".join(item.to_str() for item in self.items)
+        items = [item.to_str() for item in self.items]
+        is_complex_list = any(map(lambda x: "\n" in x, items))
+
+        items_str = ("\n\n" if is_complex_list else "\n").join(items)
 
         lines = items_str.split("\n")
         lines = map(lambda x: "  " * (self.indent - 1) + x, lines)
@@ -252,6 +260,13 @@ class Document(MarkdownElement):
     ] = Field(..., description="Document content")
 
     def to_str(self) -> str:
-        return remove_consecutive_blank_lines(
-            "\n\n".join(child.to_str() for child in self.children)
-        )
+        if not self.children:
+            return ""
+
+        # Join with single blank line between elements
+        content = "\n\n".join(child.to_str() for child in self.children)
+
+        # Remove trailing blank lines
+        content = content.rstrip("\n")
+
+        return remove_consecutive_blank_lines(content)

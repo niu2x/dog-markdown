@@ -4,7 +4,7 @@ Provides a fluent interface for building documents without directly creating mod
 """
 
 from __future__ import annotations
-from typing import List, Optional
+from typing import List
 from .models import (
     Document,
     Heading,
@@ -24,22 +24,20 @@ class MarkdownBuilder:
     """Fluent builder for creating Markdown documents procedurally."""
 
     def __init__(self):
-        self._children = []
-        self._list_stack: List[List[ListItem]] = []
-        self._current_list_items: List[ListItem] = []
+        self._intermediate_stack = [[]]
 
-    def add_heading(self, level: int, content: str) -> MarkdownBuilder:
+    def add_heading(self, level: int, content: str | Paragraph) -> MarkdownBuilder:
         """Add a heading to the document.
 
         Args:
             level: Heading level (1-6)
             content: Heading text
         """
-        self._children.append(Heading(level=level, content=content))
+        self._intermediate_stack[-1].append(Heading(level=level, content=content))
         return self
 
     def add_paragraph(
-        self, content: str | List[str | Text | Link | Image]
+        self, content: str | List[str | Text | Link | Image] | Paragraph
     ) -> MarkdownBuilder:
         """Add a paragraph to the document.
 
@@ -47,7 +45,11 @@ class MarkdownBuilder:
             content: Paragraph content as string or list of elements
         """
         if isinstance(content, str):
-            self._children.append(Paragraph(children=[Text(content=content)]))
+            self._intermediate_stack[-1].append(
+                Paragraph(children=[Text(content=content)])
+            )
+        elif isinstance(content, Paragraph):
+            self._intermediate_stack[-1].append(content)
         else:
             children = []
             for item in content:
@@ -55,16 +57,58 @@ class MarkdownBuilder:
                     children.append(Text(content=item))
                 else:
                     children.append(item)
-            self._children.append(Paragraph(children=children))
+            self._intermediate_stack[-1].append(Paragraph(children=children))
         return self
 
-    def add_text(self, content: str) -> MarkdownBuilder:
-        """Add a plain text paragraph to the document.
+    def start_paragraph(self):
+        self._intermediate_stack.append([])
+        return self
+
+    def end_paragraph(self):
+        paragraph = Paragraph(children=self._intermediate_stack.pop())
+        self._intermediate_stack[-1].append(paragraph)
+        return self
+
+    def paragraph(self):
+        """Context manager for creating a paragraph.
+
+        Usage:
+            with builder.paragraph():
+                builder.add_text("Hello ")
+                builder.add_link("world", "https://example.com")
+        """
+
+        class ParagraphContext:
+            def __init__(self, builder):
+                self.builder = builder
+
+            def __enter__(self):
+                self.builder.start_paragraph()
+                return self.builder
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                if exc_type is None:
+                    self.builder.end_paragraph()
+
+        return ParagraphContext(self)
+
+    def add_text(self, content: str, bold: bool = False) -> MarkdownBuilder:
+        """Add plain text to the current element.
 
         Args:
             content: Text content
+            bold: Whether to render text as bold (default: False)
         """
-        return self.add_paragraph(content)
+        self._intermediate_stack[-1].append(Text(content=content, bold=bold))
+        return self
+
+    def add_bold_text(self, content: str) -> MarkdownBuilder:
+        """Add bold text to the current element.
+
+        Args:
+            content: Bold text content
+        """
+        return self.add_text(content, bold=True)
 
     def add_link(
         self, text: str, url: str, title: str | None = None
@@ -76,7 +120,8 @@ class MarkdownBuilder:
             url: Target URL
             title: Optional tooltip title
         """
-        return self.add_paragraph([Link(text=text, url=url, title=title)])
+        self._intermediate_stack[-1].append(Link(text=text, url=url, title=title))
+        return self
 
     def add_image(
         self, alt: str, url: str, title: str | None = None
@@ -89,9 +134,8 @@ class MarkdownBuilder:
             title: Optional tooltip title
         """
         # Images must be wrapped in a paragraph
-        self._children.append(
-            Paragraph(children=[Image(alt=alt, url=url, title=title)])
-        )
+
+        self._intermediate_stack[-1].append(Image(alt=alt, url=url, title=title))
         return self
 
     def add_code_block(
@@ -103,7 +147,9 @@ class MarkdownBuilder:
             content: Code content
             language: Optional programming language for syntax highlighting
         """
-        self._children.append(CodeBlock(content=content, language=language))
+        self._intermediate_stack[-1].append(
+            CodeBlock(content=content, language=language)
+        )
         return self
 
     def add_blockquote(
@@ -142,7 +188,9 @@ class MarkdownBuilder:
                 else:
                     doc_children.append(item)
 
-        self._children.append(Blockquote(content=Document(children=doc_children)))
+        self._intermediate_stack[-1].append(
+            Blockquote(content=Document(children=doc_children))
+        )
         return self
 
     def add_table(
@@ -158,18 +206,19 @@ class MarkdownBuilder:
             rows: Table data rows
             align: Optional column alignment (left, center, right)
         """
-        self._children.append(Table(headers=headers, rows=rows, align=align))  # type: ignore
+        self._intermediate_stack[-1].append(
+            Table(headers=headers, rows=rows, align=align)
+        )  # type: ignore
         return self
 
-    def start_list(self) -> MarkdownBuilder:
+    def start_unordered_list(self) -> MarkdownBuilder:
         """Start an unordered list.
 
         If already inside a list, this will create a nested list inside the current list item.
         """
         # If we're already inside a list, push current list to stack
-        if self._current_list_items:
-            self._list_stack.append(self._current_list_items)
-        self._current_list_items = []
+        self._intermediate_stack.append([])
+
         return self
 
     def add_list_item(
@@ -177,7 +226,7 @@ class MarkdownBuilder:
         content: str
         | Paragraph
         | Document
-        | List[str | Text | Link | Image | Paragraph],
+        | List[str | Text | Link | Image | Paragraph | UnorderedList],
     ) -> MarkdownBuilder:
         """Add an item to the current list.
 
@@ -191,43 +240,93 @@ class MarkdownBuilder:
         elif isinstance(content, Document):
             doc = content
         else:
-            # If it's a list of elements, wrap them in a single paragraph
-            paragraph_children = []
+            # Handle mixed content including nested lists
+            doc_children = []
+            current_paragraph = []
+
             for item in content:
-                if isinstance(item, str):
-                    paragraph_children.append(Text(content=item))
+                if isinstance(item, (str, Text, Link, Image)):
+                    current_paragraph.append(item)
                 elif isinstance(item, Paragraph):
-                    # If it's already a paragraph, add its children directly
-                    paragraph_children.extend(item.children)
-                else:
-                    paragraph_children.append(item)
-            doc = Document(children=[Paragraph(children=paragraph_children)])
-        self._current_list_items.append(ListItem(content=doc))
+                    if current_paragraph:
+                        # Flush current paragraph if exists
+                        para_children = []
+                        for elem in current_paragraph:
+                            if isinstance(elem, str):
+                                para_children.append(Text(content=elem))
+                            else:
+                                para_children.append(elem)
+                        doc_children.append(Paragraph(children=para_children))
+                        current_paragraph = []
+                    doc_children.append(item)
+                elif isinstance(item, UnorderedList):
+                    if current_paragraph:
+                        # Flush current paragraph before adding list
+                        para_children = []
+                        for elem in current_paragraph:
+                            if isinstance(elem, str):
+                                para_children.append(Text(content=elem))
+                            else:
+                                para_children.append(elem)
+                        doc_children.append(Paragraph(children=para_children))
+                        current_paragraph = []
+                    doc_children.append(item)
+
+            # Flush remaining paragraph content
+            if current_paragraph:
+                para_children = []
+                for elem in current_paragraph:
+                    if isinstance(elem, str):
+                        para_children.append(Text(content=elem))
+                    else:
+                        para_children.append(elem)
+                doc_children.append(Paragraph(children=para_children))
+
+            doc = Document(children=doc_children)
+
+        self._intermediate_stack[-1].append(ListItem(content=doc))
         return self
 
-    def end_list(self) -> MarkdownBuilder:
-        """End the current list and add it to the document or parent list item."""
-        if not self._current_list_items:
-            return self
-
+    def end_unordered_list(self) -> MarkdownBuilder:
+        """End the current unordered list and add it to the document or parent list item."""
         # Create the list
-        current_list = UnorderedList(items=self._current_list_items)
-        self._current_list_items = []
+        items = self._intermediate_stack.pop()
 
-        if self._list_stack:
-            # If we have a parent list, add this list as a child of the last item
-            parent_items = self._list_stack.pop()
-            if parent_items:
-                last_item = parent_items[-1]
-                # Append the nested list to the last item's content
-                new_children = list(last_item.content.children)
-                new_children.append(current_list)
-                parent_items[-1] = ListItem(content=Document(children=new_children))
-                self._current_list_items = parent_items
-        else:
-            # Otherwise add to main document
-            self._children.append(current_list)
+        list_items = []
+        for x in items:
+            if isinstance(x, Document):
+                list_items.append(ListItem(content=x))
+            elif isinstance(x, Paragraph) or isinstance(x, CodeBlock):
+                list_items.append(ListItem(content=Document(children=[x])))
+            else:
+                raise Exception(f"unexpected item {x}")
+
+        current_list = UnorderedList(items=list_items)
+        self._intermediate_stack[-1].append(current_list)
         return self
+
+    def unordered_list(self):
+        """Context manager for creating an unordered list.
+
+        Usage:
+            with builder.unordered_list():
+                builder.add_list_item("Item 1")
+                builder.add_list_item("Item 2")
+        """
+
+        class UnorderedListContext:
+            def __init__(self, builder):
+                self.builder = builder
+
+            def __enter__(self):
+                self.builder.start_unordered_list()
+                return self.builder
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                if exc_type is None:
+                    self.builder.end_unordered_list()
+
+        return UnorderedListContext(self)
 
     def build(self) -> Document:
         """Build and return the final Document.
@@ -235,7 +334,7 @@ class MarkdownBuilder:
         Returns:
             Complete Markdown Document
         """
-        return Document(children=self._children.copy())
+        return Document(children=self._intermediate_stack[-1].copy())
 
     def to_str(self) -> str:
         """Build and convert the document to Markdown string.

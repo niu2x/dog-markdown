@@ -10,7 +10,7 @@ class TestMarkdownBuilder:
         assert isinstance(result, MarkdownBuilder)  # Fluent interface
 
         builder.add_paragraph("This is a paragraph")
-        builder.add_text("This is another paragraph")
+        builder.start_paragraph().add_text("This is another paragraph").end_paragraph()
 
         doc = builder.build()
         markdown_str = doc.to_str()
@@ -40,19 +40,16 @@ class TestMarkdownBuilder:
     def test_list_construction(self):
         builder = markdown()
 
-        builder.start_list()
-        builder.add_list_item("First item")
-        builder.add_list_item("Second item with nested content:")
-        from dog_markdown import Link, Text
+        with builder.unordered_list():
+            builder.add_paragraph("First item")
+            builder.add_paragraph("Second item with nested content:")
 
-        builder.add_list_item(
-            [
-                Text(content="This has "),
-                Link(text="links", url="https://example.com"),
-                Text(content=" and multiple lines"),
-            ]
-        )
-        builder.end_list()
+            from dog_markdown import Link, Text
+
+            with builder.paragraph():
+                builder.add_text("This has ")
+                builder.add_link("links", "https://example.com")
+                builder.add_text(" and multiple lines")
 
         markdown_str = builder.to_str()
         assert "- First item" in markdown_str
@@ -67,7 +64,9 @@ class TestMarkdownBuilder:
         builder.add_heading(2, "Features")
         builder.add_code_block("def hello():\n    print('world')", "python")
         builder.add_blockquote(["Type-safe Markdown generation", "Built with Pydantic"])
+        builder.start_paragraph()
         builder.add_image("Dog logo", "https://example.com/logo.png", "Company logo")
+        builder.end_paragraph()
 
         markdown_str = builder.to_str()
         assert "## Features" in markdown_str
