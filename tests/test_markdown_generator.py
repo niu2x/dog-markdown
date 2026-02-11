@@ -123,7 +123,10 @@ class TestMarkdownGeneration:
             items=[
                 ListItem(
                     content=Document(
-                        children=[Paragraph(children=[Text(content="First item")])]
+                        children=[
+                            Paragraph(children=[Text(content="First item")]),
+                            Paragraph(children=[Text(content="First item")]),
+                        ]
                     )
                 ),
                 ListItem(
@@ -138,7 +141,10 @@ class TestMarkdownGeneration:
                 ),
             ],
         )
-        assert list2_.to_str() == "  - First item\n\n  - Second item\n\n  - Third item"
+        assert (
+            list2_.to_str()
+            == "  - First item\n\n    First item\n\n  - Second item\n\n  - Third item"
+        )
 
     def test_nested_list_to_str(self):
         nested_list = UnorderedList(

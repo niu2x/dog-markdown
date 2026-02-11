@@ -162,9 +162,13 @@ class UnorderedList(MarkdownElement):
 
     def to_str(self) -> str:
         items_str = "\n\n".join(
-            "  " * (self.indent - 1) + item.to_str() for item in self.items
+            item.to_str() for item in self.items
         )
-        return items_str
+
+        lines = items_str.split("\n")
+        lines = map(lambda x: "  " * (self.indent - 1) + x, lines)
+        items_str = "\n".join(lines)
+        return remove_consecutive_blank_lines(items_str)
 
 
 class CodeBlock(MarkdownElement):
