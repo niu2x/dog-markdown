@@ -10,7 +10,7 @@ Design Decisions:
 """
 
 from __future__ import annotations
-import urllib.parse
+from urllib.parse import urlparse, quote, parse_qs, urlencode, urlunparse
 from typing import List
 from pydantic import BaseModel, Field
 
@@ -55,10 +55,32 @@ def remove_consecutive_blank_lines(text, max_consecutive=2):
 
     return result
 
-
 def _encode_url(url: str) -> str:
-    """Encode URL while preserving special characters."""
-    return urllib.parse.quote(url, safe=":/?#[]@!$&'()*+,;=")
+    """Encode URL's path and query parameters while preserving scheme, netloc, and fragment."""
+    parsed = urlparse(url)
+    
+    # Encode path, safe for '/'
+    encoded_path = quote(parsed.path, safe='/')
+    
+    # Encode query parameters properly
+    encoded_query = ''
+    if parsed.query:
+        query_params = parse_qs(parsed.query, keep_blank_values=True)
+        encoded_query = urlencode(query_params, doseq=True)
+    
+    # Encode params and fragment if needed
+    encoded_params = quote(parsed.params, safe='/')
+    encoded_fragment = quote(parsed.fragment, safe='')
+    
+    # Reassemble URL
+    return urlunparse((
+        parsed.scheme,      # unchanged
+        parsed.netloc,      # unchanged (domain safe)
+        encoded_path,
+        encoded_params,
+        encoded_query,
+        encoded_fragment
+    ))
 
 
 class MarkdownElement(BaseModel):
