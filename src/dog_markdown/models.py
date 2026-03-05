@@ -55,32 +55,35 @@ def remove_consecutive_blank_lines(text, max_consecutive=2):
 
     return result
 
+
 def _encode_url(url: str) -> str:
     """Encode URL's path and query parameters while preserving scheme, netloc, and fragment."""
     parsed = urlparse(url)
-    
+
     # Encode path, safe for '/'
-    encoded_path = quote(parsed.path, safe='/')
-    
+    encoded_path = quote(parsed.path, safe="/")
+
     # Encode query parameters properly
-    encoded_query = ''
+    encoded_query = ""
     if parsed.query:
         query_params = parse_qs(parsed.query, keep_blank_values=True)
         encoded_query = urlencode(query_params, doseq=True)
-    
+
     # Encode params and fragment if needed
-    encoded_params = quote(parsed.params, safe='/')
-    encoded_fragment = quote(parsed.fragment, safe='')
-    
+    encoded_params = quote(parsed.params, safe="/")
+    encoded_fragment = quote(parsed.fragment, safe="")
+
     # Reassemble URL
-    return urlunparse((
-        parsed.scheme,      # unchanged
-        parsed.netloc,      # unchanged (domain safe)
-        encoded_path,
-        encoded_params,
-        encoded_query,
-        encoded_fragment
-    ))
+    return urlunparse(
+        (
+            parsed.scheme,  # unchanged
+            parsed.netloc,  # unchanged (domain safe)
+            encoded_path,
+            encoded_params,
+            encoded_query,
+            encoded_fragment,
+        )
+    )
 
 
 class MarkdownElement(BaseModel):
@@ -236,7 +239,7 @@ class Blockquote(MarkdownElement):
 class Table(MarkdownElement):
     """Table element with rows and columns."""
 
-    headers: List[str] = Field(..., description="Table column headers")
+    headers: None | List[str] = Field(..., description="Table column headers")
     rows: List[List[str | Text | Link | Image]] = Field(..., description="Table rows")
     align: List[str | None] | None = Field(
         None, description="Column alignment (left, center, right)"
@@ -244,21 +247,26 @@ class Table(MarkdownElement):
 
     def to_str(self) -> str:
         # Create header row
-        header_row = f"| {' | '.join(self.headers)} |"
 
-        # Create separator row
-        if self.align:
-            separator_cols = []
-            for a in self.align:
-                if a == "center":
-                    separator_cols.append(":---:")
-                elif a == "right":
-                    separator_cols.append("---:")
-                else:  # left or None
-                    separator_cols.append("---")
-        else:
-            separator_cols = ["---"] * len(self.headers)
-        separator_row = f"| {' | '.join(separator_cols)} |"
+        header_row = ""
+        separator_row = ""
+
+        if self.headers:
+            header_row = f"| {' | '.join(self.headers)} |"
+
+            # Create separator row
+            if self.align:
+                separator_cols = []
+                for a in self.align:
+                    if a == "center":
+                        separator_cols.append(":---:")
+                    elif a == "right":
+                        separator_cols.append("---:")
+                    else:  # left or None
+                        separator_cols.append("---")
+            else:
+                separator_cols = ["---"] * len(self.headers)
+            separator_row = f"| {' | '.join(separator_cols)} |"
 
         # Create data rows
         data_rows = []
