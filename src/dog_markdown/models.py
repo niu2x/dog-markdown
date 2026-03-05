@@ -239,7 +239,7 @@ class Blockquote(MarkdownElement):
 class Table(MarkdownElement):
     """Table element with rows and columns."""
 
-    headers: None | List[str] = Field(..., description="Table column headers")
+    headers: List[str] = Field(..., description="Table column headers")
     rows: List[List[str | Text | Link | Image]] = Field(..., description="Table rows")
     align: List[str | None] | None = Field(
         None, description="Column alignment (left, center, right)"
@@ -248,25 +248,21 @@ class Table(MarkdownElement):
     def to_str(self) -> str:
         # Create header row
 
-        header_row = ""
-        separator_row = ""
+        header_row = f"| {' | '.join(self.headers)} |"
 
-        if self.headers:
-            header_row = f"| {' | '.join(self.headers)} |"
-
-            # Create separator row
-            if self.align:
-                separator_cols = []
-                for a in self.align:
-                    if a == "center":
-                        separator_cols.append(":---:")
-                    elif a == "right":
-                        separator_cols.append("---:")
-                    else:  # left or None
-                        separator_cols.append("---")
-            else:
-                separator_cols = ["---"] * len(self.headers)
-            separator_row = f"| {' | '.join(separator_cols)} |"
+        # Create separator row
+        if self.align:
+            separator_cols = []
+            for a in self.align:
+                if a == "center":
+                    separator_cols.append(":---:")
+                elif a == "right":
+                    separator_cols.append("---:")
+                else:  # left or None
+                    separator_cols.append("---")
+        else:
+            separator_cols = ["---"] * len(self.headers)
+        separator_row = f"| {' | '.join(separator_cols)} |"
 
         # Create data rows
         data_rows = []
